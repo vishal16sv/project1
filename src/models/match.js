@@ -4,7 +4,8 @@ const matchSchema = new mongoose.Schema({
     matchId: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        index: true
     },
     competitionId: {
         type: String,
@@ -66,11 +67,8 @@ const matchSchema = new mongoose.Schema({
 });
 
 // Indexes
-matchSchema.index({ matchId: 1 });
 matchSchema.index({ competitionId: 1 });
 matchSchema.index({ dateStart: 1 });
 matchSchema.index({ status: 1 });
 
-const Match = mongoose.model('Match', matchSchema);
-
-module.exports = Match;
+module.exports = mongoose.model('Match', matchSchema);

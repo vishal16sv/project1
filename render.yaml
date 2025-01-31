@@ -11,7 +11,7 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: MONGODB_URI
-        value: mongodb+srv://admin_v:Vishal%40admin@cluster0.jmbsf.mongodb.net/cricket_api?retryWrites=true&w=majority
+        value: mongodb+srv://admin_v:Vishal%40admin@cluster0.jmbsf.mongodb.net/cricket_api?retryWrites=true&w=majority&authSource=admin
     healthCheckPath: /health
     autoDeploy: true
     dockerfilePath: ./Dockerfile
