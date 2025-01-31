@@ -40,7 +40,23 @@ try {
 }
 
 const connectDB = require('./src/config/database');
-const logger = require('./src/utils/logger');
+
+// Initialize logger with fallback
+let logger;
+try {
+    logger = require('./src/utils/logger');
+} catch (err) {
+    log('Warning: Logger module not found, using console logging');
+    logger = {
+        info: (msg) => log(`INFO: ${msg}`),
+        error: (msg, err) => {
+            log(`ERROR: ${msg}`);
+            if (err && err.stack) log(err.stack);
+        },
+        warn: (msg) => log(`WARN: ${msg}`),
+        debug: (msg) => log(`DEBUG: ${msg}`)
+    };
+}
 
 // Set default port
 const PORT = process.env.PORT || 3000;
