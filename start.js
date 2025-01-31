@@ -55,43 +55,31 @@ process.on('SIGINT', () => {
 // Function to start server
 const startServer = () => {
     return new Promise((resolve, reject) => {
-        const server = app.listen(port, '0.0.0.0', () => {
-            log(`Server is running on port ${port}`);
-            resolve(server);
-        });
+        try {
+            const server = app.listen(port, '0.0.0.0', () => {
+                log(`Server is running on port ${port}`);
+                resolve(server);
+            });
 
-        server.on('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-                log(`Port ${port} is already in use. Trying again...`);
-                setTimeout(() => {
+            server.on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    log(`Port ${port} is already in use`);
                     server.close();
                     reject(err);
-                }, 1000);
-            } else {
-                log(`Failed to start server: ${err.message}`);
-                reject(err);
-            }
-        });
+                } else {
+                    log(`Failed to start server: ${err.message}`);
+                    reject(err);
+                }
+            });
+        } catch (err) {
+            log(`Error creating server: ${err.message}`);
+            reject(err);
+        }
     });
 };
 
-// Attempt to start server with retries
-const MAX_RETRIES = 3;
-let retries = 0;
-
-const attemptStart = async () => {
-    try {
-        await startServer();
-    } catch (err) {
-        retries++;
-        if (retries < MAX_RETRIES) {
-            log(`Retry attempt ${retries} of ${MAX_RETRIES}`);
-            setTimeout(attemptStart, 2000);
-        } else {
-            log(`Failed to start server after ${MAX_RETRIES} attempts`);
-            process.exit(1);
-        }
-    }
-};
-
-attemptStart();
+// Start server without retries since we're in Docker
+startServer().catch((err) => {
+    log(`Failed to start server: ${err.message}`);
+    process.exit(1);
+});

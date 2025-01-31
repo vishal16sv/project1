@@ -12,6 +12,6 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: MONGODB_URI
-        sync: false
+        value: mongodb+srv://admin_v:Vishal%40admin@cluster0.jmbsf.mongodb.net/cricket_api?retryWrites=true&w=majority
     healthCheckPath: /health
     autoDeploy: true
