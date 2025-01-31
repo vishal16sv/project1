@@ -1,7 +1,9 @@
 // Load environment variables from cPanel configuration
-const app = require('./src/index.js');
+const app = require('./src/app');
 const fs = require('fs');
 const path = require('path');
+const connectDB = require('./src/config/database');
+const logger = require('./src/utils/logger');
 
 // Ensure logs directory exists
 const logsDir = path.join(__dirname, 'logs');
@@ -19,13 +21,52 @@ function log(message) {
     logStream.write(logMessage);
 }
 
-// Get port from environment variable with fallback
-const port = process.env.PORT || 3000;
+// Set default port
+const PORT = process.env.PORT || 3000;
+
+const startServer = async () => {
+    try {
+        // Connect to MongoDB
+        await connectDB();
+
+        // Start the server
+        const server = app.listen(PORT, () => {
+            logger.info(`Server is running on port ${PORT}`);
+        });
+
+        // Handle server errors
+        server.on('error', (error) => {
+            if (error.code === 'EADDRINUSE') {
+                logger.error(`Port ${PORT} is already in use. Please try a different port.`);
+                process.exit(1);
+            } else {
+                logger.error('Server error:', error);
+                process.exit(1);
+            }
+        });
+
+        // Handle process termination
+        process.on('SIGTERM', () => {
+            logger.info('SIGTERM received. Shutting down gracefully...');
+            server.close(() => {
+                logger.info('Server closed');
+                process.exit(0);
+            });
+        });
+
+    } catch (error) {
+        logger.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+// Start the server
+startServer();
 
 // Log environment variables (excluding sensitive data)
 log(`Starting application with:`);
 log(`NODE_ENV: ${process.env.NODE_ENV}`);
-log(`PORT: ${port}`);
+log(`PORT: ${PORT}`);
 log(`LOG_LEVEL: ${process.env.LOG_LEVEL}`);
 
 process.on('uncaughtException', (err) => {
@@ -39,32 +80,8 @@ process.on('unhandledRejection', (err) => {
     log(err.stack);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    log('Received SIGTERM. Performing graceful shutdown...');
-    logStream.end();
-    process.exit(0);
-});
-
 process.on('SIGINT', () => {
     log('Received SIGINT. Performing graceful shutdown...');
     logStream.end();
     process.exit(0);
-});
-
-// Start server
-const server = app.listen(port, '0.0.0.0', () => {
-    log(`Server is running on port ${port}`);
-}).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-        log(`Port ${port} is already in use. This is expected during container restarts.`);
-        // Wait a bit and try to close the server
-        setTimeout(() => {
-            server.close();
-            process.exit(1);
-        }, 1000);
-    } else {
-        log(`Failed to start server: ${err.message}`);
-        process.exit(1);
-    }
 });
