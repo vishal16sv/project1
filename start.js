@@ -1,9 +1,5 @@
-// Load environment variables from cPanel configuration
-const app = require('./src/app');
-const fs = require('fs');
 const path = require('path');
-const connectDB = require('./src/config/database');
-const logger = require('./src/utils/logger');
+const fs = require('fs');
 
 // Ensure logs directory exists
 const logsDir = path.join(__dirname, 'logs');
@@ -11,35 +7,70 @@ if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir);
 }
 
-// Create a write stream for logging
+// Create write stream for logging
 const logStream = fs.createWriteStream(path.join(logsDir, 'app.log'), { flags: 'a' });
 
 function log(message) {
     const timestamp = new Date().toISOString();
     const logMessage = `${timestamp} - ${message}\n`;
-    console.log(logMessage);
+    console.log(logMessage.trim());
     logStream.write(logMessage);
 }
 
+// Log startup information
+log('Starting application...');
+
+// Import dependencies
+let app;
+try {
+    app = require('./src/app');
+} catch (err) {
+    log(`Failed to load app module: ${err.message}`);
+    if (err.code === 'MODULE_NOT_FOUND') {
+        log('Checking for index.js instead...');
+        try {
+            app = require('./src/index');
+        } catch (innerErr) {
+            log(`Failed to load index.js as well: ${innerErr.message}`);
+            process.exit(1);
+        }
+    } else {
+        process.exit(1);
+    }
+}
+
+const connectDB = require('./src/config/database');
+const logger = require('./src/utils/logger');
+
 // Set default port
 const PORT = process.env.PORT || 3000;
+
+// Log environment variables (excluding sensitive data)
+log(`Environment Configuration:`);
+log(`NODE_ENV: ${process.env.NODE_ENV}`);
+log(`PORT: ${PORT}`);
+log(`LOG_LEVEL: ${process.env.LOG_LEVEL}`);
 
 const startServer = async () => {
     try {
         // Connect to MongoDB
         await connectDB();
+        log('MongoDB connected successfully');
 
         // Start the server
         const server = app.listen(PORT, () => {
+            log(`Server is running on port ${PORT}`);
             logger.info(`Server is running on port ${PORT}`);
         });
 
         // Handle server errors
         server.on('error', (error) => {
             if (error.code === 'EADDRINUSE') {
+                log(`Port ${PORT} is already in use. Please try a different port.`);
                 logger.error(`Port ${PORT} is already in use. Please try a different port.`);
                 process.exit(1);
             } else {
+                log(`Server error: ${error.message}`);
                 logger.error('Server error:', error);
                 process.exit(1);
             }
@@ -47,41 +78,36 @@ const startServer = async () => {
 
         // Handle process termination
         process.on('SIGTERM', () => {
+            log('SIGTERM received. Shutting down gracefully...');
             logger.info('SIGTERM received. Shutting down gracefully...');
             server.close(() => {
+                log('Server closed');
                 logger.info('Server closed');
                 process.exit(0);
             });
         });
 
     } catch (error) {
+        log(`Failed to start server: ${error.message}`);
         logger.error('Failed to start server:', error);
         process.exit(1);
     }
 };
 
-// Start the server
-startServer();
-
-// Log environment variables (excluding sensitive data)
-log(`Starting application with:`);
-log(`NODE_ENV: ${process.env.NODE_ENV}`);
-log(`PORT: ${PORT}`);
-log(`LOG_LEVEL: ${process.env.LOG_LEVEL}`);
-
+// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-    log(`Uncaught Exception: ${err.message}`);
+    log('Uncaught Exception:');
+    log(err.message);
     log(err.stack);
     process.exit(1);
 });
 
-process.on('unhandledRejection', (err) => {
-    log(`Unhandled Rejection: ${err.message}`);
-    log(err.stack);
-});
-
+// Handle SIGINT
 process.on('SIGINT', () => {
     log('Received SIGINT. Performing graceful shutdown...');
     logStream.end();
     process.exit(0);
 });
+
+// Start the server
+startServer();
