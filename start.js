@@ -20,7 +20,7 @@ function log(message) {
 }
 
 // Get port from environment variable with fallback
-const port = parseInt(process.env.PORT || '3000', 10);
+const port = process.env.PORT || 3000;
 
 // Log environment variables (excluding sensitive data)
 log(`Starting application with:`);
@@ -54,32 +54,17 @@ process.on('SIGINT', () => {
 
 // Function to start server
 const startServer = () => {
-    return new Promise((resolve, reject) => {
-        try {
-            const server = app.listen(port, '0.0.0.0', () => {
-                log(`Server is running on port ${port}`);
-                resolve(server);
-            });
-
-            server.on('error', (err) => {
-                if (err.code === 'EADDRINUSE') {
-                    log(`Port ${port} is already in use`);
-                    server.close();
-                    reject(err);
-                } else {
-                    log(`Failed to start server: ${err.message}`);
-                    reject(err);
-                }
-            });
-        } catch (err) {
-            log(`Error creating server: ${err.message}`);
-            reject(err);
-        }
-    });
+    try {
+        app.listen(port, '0.0.0.0', () => {
+            log(`Server is running on port ${port}`);
+        }).on('error', (err) => {
+            log(`Failed to start server: ${err.message}`);
+            process.exit(1);
+        });
+    } catch (err) {
+        log(`Error creating server: ${err.message}`);
+        process.exit(1);
+    }
 };
 
-// Start server without retries since we're in Docker
-startServer().catch((err) => {
-    log(`Failed to start server: ${err.message}`);
-    process.exit(1);
-});
+startServer();

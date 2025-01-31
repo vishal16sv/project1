@@ -11,7 +11,7 @@ COPY . .
 # Default port if not set by environment
 ENV PORT=3000
 
-# Expose the port that will be used
-EXPOSE ${PORT}
+# Expose the port
+EXPOSE 3000
 
-CMD ["node", "start.js"]
+CMD ["sh", "-c", "node start.js"]

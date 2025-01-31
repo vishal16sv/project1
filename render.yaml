@@ -11,6 +11,8 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
+      - key: PORT
+        value: 3000
       - key: MONGODB_URI
         value: mongodb+srv://admin_v:Vishal%40admin@cluster0.jmbsf.mongodb.net/cricket_api?retryWrites=true&w=majority
     healthCheckPath: /health
