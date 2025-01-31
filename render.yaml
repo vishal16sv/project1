@@ -1,9 +1,10 @@
 services:
   - type: web
     name: cricket-api
-    env: node
-    buildCommand: npm install
-    startCommand: node start.js
+    env: docker
+    region: singapore
+    plan: free
+    branch: main
     envVars:
       - key: NODE_ENV
         value: production
