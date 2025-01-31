@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: cricket-api
+    env: node
+    buildCommand: npm install
+    startCommand: node start.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: LOG_LEVEL
+        value: info
+      - key: MONGODB_URI
+        sync: false # This will be set manually in Render dashboard
+      - key: BASE_URL
+        value: https://cricket-api.onrender.com
