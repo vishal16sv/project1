@@ -8,10 +8,6 @@ RUN npm install
 
 COPY . .
 
-# Default port if not set by environment
-ENV PORT=3000
+EXPOSE 10000
 
-# Expose the port
-EXPOSE 3000
-
-CMD ["sh", "-c", "node start.js"]
+CMD ["node", "start.js"]

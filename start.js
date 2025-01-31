@@ -20,7 +20,7 @@ function log(message) {
 }
 
 // Get port from environment variable with fallback
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 
 // Log environment variables (excluding sensitive data)
 log(`Starting application with:`);
@@ -52,19 +52,10 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-// Function to start server
-const startServer = () => {
-    try {
-        app.listen(port, '0.0.0.0', () => {
-            log(`Server is running on port ${port}`);
-        }).on('error', (err) => {
-            log(`Failed to start server: ${err.message}`);
-            process.exit(1);
-        });
-    } catch (err) {
-        log(`Error creating server: ${err.message}`);
-        process.exit(1);
-    }
-};
-
-startServer();
+// Start server
+app.listen(port, '0.0.0.0', () => {
+    log(`Server is running on port ${port}`);
+}).on('error', (err) => {
+    log(`Failed to start server: ${err.message}`);
+    process.exit(1);
+});
