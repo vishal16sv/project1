@@ -78,13 +78,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-        port: process.env.PORT
-    });
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
+// Root endpoint
+app.get('/api', (req, res) => {
+    res.status(200).json({ message: 'Cricket API is running' });
 });
 
 // Import and use routes

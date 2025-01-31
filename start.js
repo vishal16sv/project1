@@ -58,7 +58,16 @@ try {
     };
 }
 
-// Set default port
+// Connect to MongoDB
+connectDB()
+    .then(() => {
+        log('MongoDB connected successfully');
+    })
+    .catch((err) => {
+        log('MongoDB connection error:', err);
+    });
+
+// Set default port for local development
 const PORT = process.env.PORT || 3000;
 
 // Log environment variables (excluding sensitive data)
@@ -67,48 +76,37 @@ log(`NODE_ENV: ${process.env.NODE_ENV}`);
 log(`PORT: ${PORT}`);
 log(`LOG_LEVEL: ${process.env.LOG_LEVEL}`);
 
-const startServer = async () => {
-    try {
-        // Connect to MongoDB
-        await connectDB();
-        log('MongoDB connected successfully');
+// Start the server if we're not in Vercel
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        log(`Server is running on port ${PORT}`);
+        logger.info(`Server is running on port ${PORT}`);
+    });
 
-        // Start the server
-        const server = app.listen(PORT, () => {
-            log(`Server is running on port ${PORT}`);
-            logger.info(`Server is running on port ${PORT}`);
+    // Handle server errors
+    app.on('error', (error) => {
+        if (error.code === 'EADDRINUSE') {
+            log(`Port ${PORT} is already in use. Please try a different port.`);
+            logger.error(`Port ${PORT} is already in use. Please try a different port.`);
+            process.exit(1);
+        } else {
+            log(`Server error: ${error.message}`);
+            logger.error('Server error:', error);
+            process.exit(1);
+        }
+    });
+
+    // Handle process termination
+    process.on('SIGTERM', () => {
+        log('SIGTERM received. Shutting down gracefully...');
+        logger.info('SIGTERM received. Shutting down gracefully...');
+        app.close(() => {
+            log('Server closed');
+            logger.info('Server closed');
+            process.exit(0);
         });
-
-        // Handle server errors
-        server.on('error', (error) => {
-            if (error.code === 'EADDRINUSE') {
-                log(`Port ${PORT} is already in use. Please try a different port.`);
-                logger.error(`Port ${PORT} is already in use. Please try a different port.`);
-                process.exit(1);
-            } else {
-                log(`Server error: ${error.message}`);
-                logger.error('Server error:', error);
-                process.exit(1);
-            }
-        });
-
-        // Handle process termination
-        process.on('SIGTERM', () => {
-            log('SIGTERM received. Shutting down gracefully...');
-            logger.info('SIGTERM received. Shutting down gracefully...');
-            server.close(() => {
-                log('Server closed');
-                logger.info('Server closed');
-                process.exit(0);
-            });
-        });
-
-    } catch (error) {
-        log(`Failed to start server: ${error.message}`);
-        logger.error('Failed to start server:', error);
-        process.exit(1);
-    }
-};
+    });
+}
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
@@ -125,5 +123,5 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-// Start the server
-startServer();
+// Export the app for Vercel
+module.exports = app;
