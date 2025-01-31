@@ -2,16 +2,12 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
     try {
-        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://admin_v:Vishal@admin@cluster0.jmbsf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+        const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://vishal_v:Vishal$4866@cluster0.jmbsf.mongodb.net/cricket_api?retryWrites=true&w=majority&appName=Cluster0';
         
         const conn = await mongoose.connect(mongoURI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
-            dbName: 'cricket_api',
-            retryWrites: true,
-            w: 'majority'
+            dbName: 'cricket_api'
         });
 
         console.log(`MongoDB Connected: ${conn.connection.host}`);
