@@ -21,44 +21,10 @@ function log(message) {
 log('Starting application...');
 
 // Import dependencies
-let app;
-try {
-    app = require('./src/app');
-} catch (err) {
-    log(`Failed to load app module: ${err.message}`);
-    if (err.code === 'MODULE_NOT_FOUND') {
-        log('Checking for index.js instead...');
-        try {
-            app = require('./src/index');
-        } catch (innerErr) {
-            log(`Failed to load index.js as well: ${innerErr.message}`);
-            process.exit(1);
-        }
-    } else {
-        process.exit(1);
-    }
-}
-
-const connectDB = require('./src/config/database');
-
-// Initialize logger with fallback
-let logger;
-try {
-    logger = require('./src/utils/logger');
-} catch (err) {
-    log('Warning: Logger module not found, using console logging');
-    logger = {
-        info: (msg) => log(`INFO: ${msg}`),
-        error: (msg, err) => {
-            log(`ERROR: ${msg}`);
-            if (err && err.stack) log(err.stack);
-        },
-        warn: (msg) => log(`WARN: ${msg}`),
-        debug: (msg) => log(`DEBUG: ${msg}`)
-    };
-}
+const app = require('./src/app');
 
 // Connect to MongoDB
+const connectDB = require('./src/config/database');
 connectDB()
     .then(() => {
         log('MongoDB connected successfully');
@@ -76,52 +42,12 @@ log(`NODE_ENV: ${process.env.NODE_ENV}`);
 log(`PORT: ${PORT}`);
 log(`LOG_LEVEL: ${process.env.LOG_LEVEL}`);
 
-// Start the server if we're not in Vercel
+// Start the server if we're not in production
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {
-        log(`Server is running on port ${PORT}`);
-        logger.info(`Server is running on port ${PORT}`);
-    });
-
-    // Handle server errors
-    app.on('error', (error) => {
-        if (error.code === 'EADDRINUSE') {
-            log(`Port ${PORT} is already in use. Please try a different port.`);
-            logger.error(`Port ${PORT} is already in use. Please try a different port.`);
-            process.exit(1);
-        } else {
-            log(`Server error: ${error.message}`);
-            logger.error('Server error:', error);
-            process.exit(1);
-        }
-    });
-
-    // Handle process termination
-    process.on('SIGTERM', () => {
-        log('SIGTERM received. Shutting down gracefully...');
-        logger.info('SIGTERM received. Shutting down gracefully...');
-        app.close(() => {
-            log('Server closed');
-            logger.info('Server closed');
-            process.exit(0);
-        });
+        console.log(`Server is running on port ${PORT}`);
     });
 }
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-    log('Uncaught Exception:');
-    log(err.message);
-    log(err.stack);
-    process.exit(1);
-});
-
-// Handle SIGINT
-process.on('SIGINT', () => {
-    log('Received SIGINT. Performing graceful shutdown...');
-    logStream.end();
-    process.exit(0);
-});
 
 // Export the app for Vercel
 module.exports = app;
