@@ -20,7 +20,7 @@ function log(message) {
 }
 
 // Get port from environment variable with fallback
-const port = process.env.PORT || 10000;
+const port = process.env.PORT || 3000;
 
 // Log environment variables (excluding sensitive data)
 log(`Starting application with:`);
@@ -53,9 +53,18 @@ process.on('SIGINT', () => {
 });
 
 // Start server
-app.listen(port, '0.0.0.0', () => {
+const server = app.listen(port, '0.0.0.0', () => {
     log(`Server is running on port ${port}`);
 }).on('error', (err) => {
-    log(`Failed to start server: ${err.message}`);
-    process.exit(1);
+    if (err.code === 'EADDRINUSE') {
+        log(`Port ${port} is already in use. This is expected during container restarts.`);
+        // Wait a bit and try to close the server
+        setTimeout(() => {
+            server.close();
+            process.exit(1);
+        }, 1000);
+    } else {
+        log(`Failed to start server: ${err.message}`);
+        process.exit(1);
+    }
 });
