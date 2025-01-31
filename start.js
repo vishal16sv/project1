@@ -19,7 +19,8 @@ function log(message) {
     logStream.write(logMessage);
 }
 
-const port = process.env.PORT || 10000;
+// Render assigns a port through process.env.PORT
+const port = process.env.PORT || 3000;
 
 // Log environment variables (excluding sensitive data)
 log(`Starting application with:`);
@@ -52,7 +53,8 @@ process.on('SIGINT', () => {
 });
 
 try {
-    app.listen(port, '0.0.0.0', () => {
+    // Listen on all network interfaces
+    app.listen(port, () => {
         log(`Server is running on port ${port}`);
     }).on('error', (err) => {
         log(`Failed to start server: ${err.message}`);
