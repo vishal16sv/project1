@@ -19,7 +19,7 @@ function log(message) {
     logStream.write(logMessage);
 }
 
-const port = process.env.PORT || 3033;
+const port = process.env.PORT || 10000;
 
 // Log environment variables (excluding sensitive data)
 log(`Starting application with:`);
@@ -52,7 +52,7 @@ process.on('SIGINT', () => {
 });
 
 try {
-    app.listen(port, '127.0.0.1', () => {
+    app.listen(port, '0.0.0.0', () => {
         log(`Server is running on port ${port}`);
     }).on('error', (err) => {
         log(`Failed to start server: ${err.message}`);

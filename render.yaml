@@ -8,10 +8,10 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: 10000
       - key: LOG_LEVEL
         value: info
       - key: MONGODB_URI
-        sync: false # This will be set manually in Render dashboard
-      - key: BASE_URL
-        value: https://cricket-api.onrender.com
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
